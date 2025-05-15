@@ -3,14 +3,14 @@
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { getProjects, getTasksByProject } from "@/lib/data"
+import { getProjects, getTasksByProject, Project } from "@/lib/data"
 import { CalendarDays, Plus, Users } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
 export default function ProjectsPage() {
   const { user } = useAuth()
-  const [projects, setProjects] = useState([])
+  const [projects, setProjects] = useState<Project[] | any>([])
 
   useEffect(() => {
     setProjects(getProjects())
@@ -36,7 +36,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {projects.map((project) => {
+        {projects.map((project: Project) => {
           const projectTasks = getTasksByProject(project.id)
           const completedTasks = projectTasks.filter((task) => task.progress === 100).length
           const totalTasks = projectTasks.length

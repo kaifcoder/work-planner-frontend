@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getProjects, getTasksByStatus, getTeamMembers, tasks, generateReportData } from "@/lib/data"
+import { getProjects, getTasksByStatus, getTeamMembers, tasks, generateReportData, Project, User, Task } from "@/lib/data"
 import { BarChart, CheckCircle, Download, PieChart, XCircle, Clock, Filter } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Progress } from "@/components/ui/progress"
@@ -13,16 +13,16 @@ import { DatePicker } from "@/components/ui/date-picker"
 
 export default function ReportsPage() {
   const { user } = useAuth()
-  const [projects, setProjects] = useState([])
-  const [teamMembers, setTeamMembers] = useState([])
-  const [pendingTasks, setPendingTasks] = useState([])
-  const [approvedTasks, setApprovedTasks] = useState([])
-  const [rejectedTasks, setRejectedTasks] = useState([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [teamMembers, setTeamMembers] = useState<User[]>([])
+  const [pendingTasks, setPendingTasks] = useState<Task[]>([])
+  const [approvedTasks, setApprovedTasks] = useState<Task[]>([])
+  const [rejectedTasks, setRejectedTasks] = useState<Task[]>([])
   const [selectedProject, setSelectedProject] = useState("all")
   const [selectedMember, setSelectedMember] = useState("all")
-  const [startDate, setStartDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
-  const [filteredTasks, setFilteredTasks] = useState([])
+  const [startDate, setStartDate] = useState<Date | any>(null)
+  const [endDate, setEndDate] = useState<Date | any>(null)
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([])
 
   useEffect(() => {
     setProjects(getProjects())

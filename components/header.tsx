@@ -13,7 +13,7 @@ export function Header() {
     <header className="border-b">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="font-bold text-xl">
-          ProjectHub
+          Work Planner
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
