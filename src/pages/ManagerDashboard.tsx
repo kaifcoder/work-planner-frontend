@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import ProjectForm from "../components/forms/ProjectForm";
 import Modal from "../components/common/Modal";
+import { useNavigate } from "react-router-dom";
+import { apiService } from "../api/apiService";
 
 interface Project {
   id: string;
@@ -18,18 +20,27 @@ export default function ManagerDashboard() {
   const [userForm, setUserForm] = useState({ username: "", password: "" });
   const [userSuccess, setUserSuccess] = useState("");
   const [userError, setUserError] = useState("");
+  const navigate = useNavigate();
+  const {getAllProjects} = apiService;
 
   // Dummy fetch for projects (replace with real API)
+  const fetchProjects = async () => {
+      setLoading(true);
+      try {
+        const projectsData = await getAllProjects();
+        setProjects(projectsData);
+      } catch (err) {
+        console.error("Failed to fetch projects:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
   useEffect(() => {
-    setProjects([
-      { id: "1", name: "Website Redesign", description: "Update landing page and dashboard.", endDate: "2025-06-30" },
-      { id: "2", name: "Mobile App", description: "Build v2 for Android/iOS.", endDate: "2025-07-15" },
-    ]);
+    fetchProjects();
   }, []);
 
   const handleProjectCreated = () => {
     setShowProjectModal(false);
-    // TODO: Fetch projects again
   };
 
   const handleUserInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +73,9 @@ export default function ManagerDashboard() {
   return (
     <div>
       <Navbar />
-      <div className="container min-h-screen p-6 mx-auto bg-slate-50">
+      <div className="p-6 min-h-screen mx-auto bg-slate-50">
+        {/* welcome manager */}
+        <h1 className="mb-6 text-3xl font-bold text-slate-800">Welcome, Manager!</h1>
         <div className="flex gap-4 mb-8">
           <button
             className="px-6 py-2 text-lg font-semibold text-white transition-colors bg-indigo-700 rounded-lg shadow hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
@@ -129,7 +142,7 @@ export default function ManagerDashboard() {
             <div
               key={project.id}
               className="flex items-center justify-between p-6 transition bg-white border shadow-lg cursor-pointer rounded-xl hover:shadow-xl border-slate-200 group"
-              // TODO: Add onClick to go to project details
+              onClick={() => navigate(`/manager/projects/${project.id}`)} 
             >
               <div>
                 <h3 className="mb-1 text-xl font-bold transition-colors text-slate-800 group-hover:text-indigo-700">{project.name}</h3>

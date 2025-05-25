@@ -1,6 +1,5 @@
 // src/components/forms/ProjectForm.js
 import { useState, useEffect } from 'react';
-import { createProject, updateProject } from '../../api/projects';
 import { getUsers } from '../../api/users'; // To get TEAM_MEMBERs
 import LoadingSpinner from '../common/LoadingSpinner';
 
@@ -32,8 +31,6 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
   const [endDate, setEndDate] = useState<string>(project?.endDate || '');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-
-  const projectStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED'];
 
 
   const handleSubmit = async (e: React.FormEvent) => {

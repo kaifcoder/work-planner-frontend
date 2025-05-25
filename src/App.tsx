@@ -36,10 +36,10 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/manager" element={<PrivateRoute><ManagerDashboard /></PrivateRoute>} />
-      <Route path="/manager/projects/:projectId" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
+      <Route path="/manager/projects/:id" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
       <Route path="/manager/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
       <Route path="/team" element={<PrivateRoute><TeamMemberDashboard /></PrivateRoute>} />
-      <Route path="/team/tasks/:taskId" element={<PrivateRoute><TaskDetails /></PrivateRoute>} />
+      <Route path="/team/tasks/:id" element={<PrivateRoute><TaskDetails /></PrivateRoute>} />
       <Route path="/" element={
         token ? (
           role === 'ROLE_MANAGER' ? <Navigate to="/manager" replace /> : <Navigate to="/team" replace />
