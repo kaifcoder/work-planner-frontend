@@ -29,49 +29,12 @@ interface ProjectFormProps {
 const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
   const [name, setName] = useState<string>(project?.name || '');
   const [description, setDescription] = useState<string>(project?.description || '');
-  const [startDate, setStartDate] = useState<string>(project?.startDate || '');
   const [endDate, setEndDate] = useState<string>(project?.endDate || '');
-  const [status, setStatus] = useState<string>(project?.status || 'NOT_STARTED');
-  const [assignedTeamMemberIds, setAssignedTeamMemberIds] = useState<Set<string>>(
-    new Set(project?.assignedTeamMembers?.map((member: TeamMember) => member.id) || [])
-  );
-  const [allTeamMembers, setAllTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
   const projectStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED'];
 
-  useEffect(() => {
-    const fetchTeamMembers = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const members = await getUsers('TEAM_MEMBER');
-        setAllTeamMembers(members);
-      } catch (err) {
-        let errorMsg = 'Failed to load team members.';
-        if (err && typeof err === 'object' && err !== null && 'response' in err) {
-          errorMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message || errorMsg;
-        }
-        setError(errorMsg);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTeamMembers();
-  }, []);
-
-  const handleMemberToggle = (memberId: string) => {
-    setAssignedTeamMemberIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(memberId)) {
-        newSet.delete(memberId);
-      } else {
-        newSet.add(memberId);
-      }
-      return newSet;
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,10 +42,7 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
     const projectData = {
       name,
       description,
-      startDate,
-      endDate: endDate || null, // Ensure empty string becomes null
-      status,
-      assignedTeamMemberIds: Array.from(assignedTeamMemberIds),
+      endDate: endDate || null
     };
 
     try {
@@ -131,19 +91,7 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block mb-2 text-sm font-semibold text-gray-700">Start Date:</label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-green-500"
-            required
-            placeholder="Start date"
-            title="Start Date"
-          />
-        </div>
-        <div>
-          <label className="block mb-2 text-sm font-semibold text-gray-700">End Date (Optional):</label>
+          <label className="block mb-2 text-sm font-semibold text-gray-700">Deadline: </label>
           <input
             type="date"
             value={endDate}
@@ -152,40 +100,6 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
             placeholder="End date"
             title="End Date"
           />
-        </div>
-      </div>
-      <div>
-        <label className="block mb-2 text-sm font-semibold text-gray-700">Status:</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
-          title="Project Status"
-        >
-          {projectStatuses.map(s => (
-            <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="block mb-2 text-sm font-semibold text-gray-700">Assigned Team Members:</label>
-        <div className="p-3 overflow-y-auto border border-gray-300 rounded max-h-40">
-          {allTeamMembers.length === 0 ? (
-            <p className="text-sm text-gray-500">No team members available to assign.</p>
-          ) : (
-            allTeamMembers.map(member => (
-              <div key={member.id} className="flex items-center mb-2">
-                <input
-                  type="checkbox"
-                  id={`member-${member.id}`}
-                  checked={assignedTeamMemberIds.has(member.id)}
-                  onChange={() => handleMemberToggle(member.id)}
-                  className="w-4 h-4 mr-2 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                />
-                <label htmlFor={`member-${member.id}`} className="text-sm text-gray-700">{member.name} ({member.email})</label>
-              </div>
-            ))
-          )}
         </div>
       </div>
       {error && <p className="text-xs italic text-red-500">{error}</p>}
