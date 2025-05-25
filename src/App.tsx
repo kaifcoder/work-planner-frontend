@@ -15,10 +15,17 @@ function PrivateRoute({ children }: { children: ReactElement }) {
   return token ? children : <Navigate to="/login" replace />;
 }
 
-// TODO: Replace with real role logic from user profile/JWT
+// Parse JWT and extract 'role' claim
 function getUserRole(token: string | null): 'manager' | 'team' | null {
   if (!token) return null;
-  return token.includes('manager') ? 'manager' : 'team';
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.role === 'manager') return 'manager';
+    if (payload.role === 'team') return 'team';
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 function AppRoutes() {
