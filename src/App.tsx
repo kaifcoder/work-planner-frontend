@@ -16,12 +16,12 @@ function PrivateRoute({ children }: { children: ReactElement }) {
 }
 
 // Parse JWT and extract 'role' claim
-function getUserRole(token: string | null): 'manager' | 'team' | null {
+function getUserRole(token: string | null): 'ROLE_MANAGER' | 'ROLE_TEAM_MEMBER' | null {
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.role === 'manager') return 'manager';
-    if (payload.role === 'team') return 'team';
+    if (payload.role === 'ROLE_MANAGER') return 'ROLE_MANAGER';
+    if (payload.role === 'ROLE_TEAM_MEMBER') return 'ROLE_TEAM_MEMBER';
     return null;
   } catch {
     return null;
@@ -42,7 +42,7 @@ function AppRoutes() {
       <Route path="/team/tasks/:taskId" element={<PrivateRoute><TaskDetails /></PrivateRoute>} />
       <Route path="/" element={
         token ? (
-          role === 'manager' ? <Navigate to="/manager" replace /> : <Navigate to="/team" replace />
+          role === 'ROLE_MANAGER' ? <Navigate to="/manager" replace /> : <Navigate to="/team" replace />
         ) : <Navigate to="/login" replace />
       } />
     </Routes>
