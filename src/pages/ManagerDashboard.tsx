@@ -1,146 +1,150 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import ProjectForm from "../components/forms/ProjectForm";
-import TaskForm from "../components/forms/TaskForm";
-import TaskCard from "../components/common/TaskCard";
 import Modal from "../components/common/Modal";
-import LoadingSpinner from "../components/common/LoadingSpinner";
-import { getProjectById, updateProject, createProject } from "../api/projects";
-import { getTasks, createTask } from "../api/tasks";
-import { getUsers } from "../api/users";
 
-// Project and TeamMember types
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-}
 interface Project {
   id: string;
   name: string;
   description: string;
-  startDate: string;
   endDate: string | null;
-  status: string;
-  assignedTeamMembers: TeamMember[];
 }
 
 export default function ManagerDashboard() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
-  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
-  const [showTaskModal, setShowTaskModal] = useState(false);
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [userForm, setUserForm] = useState({ username: "", password: "" });
+  const [userSuccess, setUserSuccess] = useState("");
+  const [userError, setUserError] = useState("");
 
-  // Fetch all projects
-  const fetchProjects = async () => {
+  // Dummy fetch for projects (replace with real API)
+  useEffect(() => {
+    setProjects([
+      { id: "1", name: "Website Redesign", description: "Update landing page and dashboard.", endDate: "2025-06-30" },
+      { id: "2", name: "Mobile App", description: "Build v2 for Android/iOS.", endDate: "2025-07-15" },
+    ]);
+  }, []);
+
+  const handleProjectCreated = () => {
+    setShowProjectModal(false);
+    // TODO: Fetch projects again
+  };
+
+  const handleUserInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserForm({ ...userForm, [e.target.name]: e.target.value });
+  };
+
+  const handleUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError("");
+    setUserSuccess("");
     setLoading(true);
-    setError("");
     try {
-      // Use getProjectById as a stub for now, or replace with a static array
-      // TODO: Replace with real getProjects API
-      setProjects([]); // No real API, so just empty for now
-    } catch {
-      setError("Failed to fetch projects");
+      const res = await fetch("http://localhost:8080/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: userForm.username, password: userForm.password }),
+      });
+      if (!res.ok) throw new Error("Registration failed");
+      setUserSuccess("Team member added successfully!");
+      setUserForm({ username: "", password: "" });
+    } catch (err) {
+      let msg = "Registration failed";
+      if (err instanceof Error) msg = err.message;
+      setUserError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const handleProjectCreated = () => {
-    setShowProjectModal(false);
-    fetchProjects();
-  };
-
-  const handleProjectEdited = () => {
-    setShowEditProjectModal(false);
-    fetchProjects();
-  };
-
-  const handleProjectDeleted = async (projectId: string) => {
-    // TODO: Implement deleteProject API
-    setProjects(projects.filter(p => p.id !== projectId));
-  };
-
   return (
     <div>
       <Navbar />
-      <div className="container p-6 mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Manager Dashboard</h1>
+      <div className="container min-h-screen p-6 mx-auto bg-slate-50">
+        <div className="flex gap-4 mb-8">
           <button
-            className="px-4 py-2 font-semibold text-white bg-green-600 rounded-md shadow-md hover:bg-green-700"
+            className="px-6 py-2 text-lg font-semibold text-white transition-colors bg-indigo-700 rounded-lg shadow hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
             onClick={() => setShowProjectModal(true)}
           >
-            + New Project
+            + Add Project
+          </button>
+          <button
+            className="px-6 py-2 text-lg font-semibold text-white transition-colors rounded-lg shadow bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            onClick={() => setShowUserModal(true)}
+          >
+            + Add Team Member
           </button>
         </div>
-        {loading ? (
-          <LoadingSpinner />
-        ) : error ? (
-          <div className="text-red-500">{error}</div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {projects.map(project => (
-              <div key={project.id} className="flex flex-col p-4 bg-white rounded-lg shadow">
-                <h2 className="mb-2 text-xl font-semibold">{project.name}</h2>
-                <p className="mb-2 text-gray-600">{project.description}</p>
-                <div className="flex gap-2 mt-auto">
-                  <button
-                    className="px-3 py-1 text-white bg-blue-500 rounded hover:bg-blue-600"
-                    onClick={() => { setSelectedProject(project); setShowEditProjectModal(true); }}
-                  >Edit</button>
-                  <button
-                    className="px-3 py-1 text-white bg-red-500 rounded hover:bg-red-600"
-                    onClick={() => handleProjectDeleted(project.id)}
-                  >Delete</button>
-                  <button
-                    className="px-3 py-1 text-white bg-purple-500 rounded hover:bg-purple-600"
-                    onClick={() => { setSelectedProject(project); setShowAssignModal(true); }}
-                  >Assign Members</button>
-                  <button
-                    className="px-3 py-1 text-white bg-green-500 rounded hover:bg-green-600"
-                    onClick={() => { setSelectedProject(project); setShowTaskModal(true); }}
-                  >Tasks</button>
-                </div>
-              </div>
-            ))}
-          </div>
+        {/* Project Modal */}
+        {showProjectModal && (
+          <Modal onClose={() => setShowProjectModal(false)} title="Create Project">
+            <ProjectForm onSaveSuccess={handleProjectCreated} />
+          </Modal>
         )}
+        {/* Add Team Member Modal */}
+        {showUserModal && (
+          <Modal onClose={() => setShowUserModal(false)} title="Add Team Member">
+            <form onSubmit={handleUserSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1 font-semibold text-slate-700">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={userForm.username}
+                  onChange={handleUserInput}
+                  className="w-full px-3 py-2 bg-white border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  required
+                  placeholder="Enter username"
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-semibold text-slate-700">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={userForm.password}
+                  onChange={handleUserInput}
+                  className="w-full px-3 py-2 bg-white border rounded-lg border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  required
+                  placeholder="Enter password"
+                />
+              </div>
+              {userError && <div className="text-red-500">{userError}</div>}
+              {userSuccess && <div className="text-emerald-600">{userSuccess}</div>}
+              <button
+                type="submit"
+                className="w-full py-2 font-semibold text-white transition-colors bg-indigo-700 rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                disabled={loading}
+              >
+                {loading ? "Adding..." : "Add Team Member"}
+              </button>
+            </form>
+          </Modal>
+        )}
+        {/* Project List */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {projects.map(project => (
+            <div
+              key={project.id}
+              className="flex items-center justify-between p-6 transition bg-white border shadow-lg cursor-pointer rounded-xl hover:shadow-xl border-slate-200 group"
+              // TODO: Add onClick to go to project details
+            >
+              <div>
+                <h3 className="mb-1 text-xl font-bold transition-colors text-slate-800 group-hover:text-indigo-700">{project.name}</h3>
+                <p className="mb-1 text-slate-600">{project.description}</p>
+                <p className="text-sm text-slate-500">Deadline: <span className="font-medium text-slate-700">{project.endDate || 'N/A'}</span></p>
+              </div>
+              <div className="flex items-center ml-4 text-indigo-400 transition-colors group-hover:text-indigo-700">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      {/* Project Create Modal */}
-      {showProjectModal && (
-        <Modal onClose={() => setShowProjectModal(false)} title="Create Project">
-          <ProjectForm onSaveSuccess={handleProjectCreated} />
-        </Modal>
-      )}
-      {/* Project Edit Modal */}
-      {showEditProjectModal && selectedProject && (
-        <Modal onClose={() => setShowEditProjectModal(false)} title="Edit Project">
-          <ProjectForm project={selectedProject} onSaveSuccess={handleProjectEdited} />
-        </Modal>
-      )}
-      {/* Assign Members Modal */}
-      {showAssignModal && selectedProject && (
-        <Modal onClose={() => setShowAssignModal(false)} title="Assign Team Members">
-          {/* TODO: Implement assign members UI */}
-          <div>Assign members UI goes here.</div>
-        </Modal>
-      )}
-      {/* Task Modal */}
-      {showTaskModal && selectedProject && (
-        <Modal onClose={() => setShowTaskModal(false)} title={`Tasks for ${selectedProject.name}`}>
-          {/* TODO: Implement task CRUD UI for selected project */}
-          <div>Task CRUD UI goes here.</div>
-        </Modal>
-      )}
     </div>
   );
 }
