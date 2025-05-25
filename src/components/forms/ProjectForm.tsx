@@ -1,20 +1,43 @@
 // src/components/forms/ProjectForm.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createProject, updateProject } from '../../api/projects';
 import { getUsers } from '../../api/users'; // To get TEAM_MEMBERs
+import LoadingSpinner from '../common/LoadingSpinner';
 
-const ProjectForm = ({ project = null, onSaveSuccess }) => {
-  const [name, setName] = useState(project?.name || '');
-  const [description, setDescription] = useState(project?.description || '');
-  const [startDate, setStartDate] = useState(project?.startDate || '');
-  const [endDate, setEndDate] = useState(project?.endDate || '');
-  const [status, setStatus] = useState(project?.status || 'NOT_STARTED');
-  const [assignedTeamMemberIds, setAssignedTeamMemberIds] = useState(
-    new Set(project?.assignedTeamMembers?.map(member => member.id) || [])
+// Define types for props and project
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string | null;
+  status: string;
+  assignedTeamMembers: TeamMember[];
+}
+
+interface ProjectFormProps {
+  project?: Project | null;
+  onSaveSuccess: () => void;
+}
+
+const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
+  const [name, setName] = useState<string>(project?.name || '');
+  const [description, setDescription] = useState<string>(project?.description || '');
+  const [startDate, setStartDate] = useState<string>(project?.startDate || '');
+  const [endDate, setEndDate] = useState<string>(project?.endDate || '');
+  const [status, setStatus] = useState<string>(project?.status || 'NOT_STARTED');
+  const [assignedTeamMemberIds, setAssignedTeamMemberIds] = useState<Set<string>>(
+    new Set(project?.assignedTeamMembers?.map((member: TeamMember) => member.id) || [])
   );
-  const [allTeamMembers, setAllTeamMembers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [allTeamMembers, setAllTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
 
   const projectStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD', 'CANCELLED'];
 
@@ -26,7 +49,11 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
         const members = await getUsers('TEAM_MEMBER');
         setAllTeamMembers(members);
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load team members.');
+        let errorMsg = 'Failed to load team members.';
+        if (err && typeof err === 'object' && err !== null && 'response' in err) {
+          errorMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message || errorMsg;
+        }
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -34,7 +61,7 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
     fetchTeamMembers();
   }, []);
 
-  const handleMemberToggle = (memberId) => {
+  const handleMemberToggle = (memberId: string) => {
     setAssignedTeamMemberIds(prev => {
       const newSet = new Set(prev);
       if (newSet.has(memberId)) {
@@ -46,7 +73,7 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     const projectData = {
@@ -66,61 +93,74 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
       }
       onSaveSuccess();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save project.');
+      let errorMsg = 'Failed to save project.';
+      if (err && typeof err === 'object' && err !== null && 'response' in err) {
+        errorMsg = (err as { response?: { data?: { message?: string } } }).response?.data?.message || errorMsg;
+      }
+      setError(errorMsg);
     }
   };
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <div className="text-red-500 text-center">{error}</div>;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-gray-700 text-sm font-semibold mb-2">Project Name:</label>
+        <label className="block mb-2 text-sm font-semibold text-gray-700">Project Name:</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-green-500"
           required
+          placeholder="Enter project name"
+          title="Project Name"
         />
       </div>
       <div>
-        <label className="block text-gray-700 text-sm font-semibold mb-2">Description:</label>
+        <label className="block mb-2 text-sm font-semibold text-gray-700">Description:</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          rows="4"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+          rows={4}
+          className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-green-500"
+          placeholder="Enter project description"
+          title="Project Description"
         ></textarea>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-gray-700 text-sm font-semibold mb-2">Start Date:</label>
+          <label className="block mb-2 text-sm font-semibold text-gray-700">Start Date:</label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-green-500"
             required
+            placeholder="Start date"
+            title="Start Date"
           />
         </div>
         <div>
-          <label className="block text-gray-700 text-sm font-semibold mb-2">End Date (Optional):</label>
+          <label className="block mb-2 text-sm font-semibold text-gray-700">End Date (Optional):</label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none focus:ring-2 focus:ring-green-500"
+            placeholder="End date"
+            title="End Date"
           />
         </div>
       </div>
       <div>
-        <label className="block text-gray-700 text-sm font-semibold mb-2">Status:</label>
+        <label className="block mb-2 text-sm font-semibold text-gray-700">Status:</label>
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow focus:outline-none focus:ring-2 focus:ring-green-500"
+          title="Project Status"
         >
           {projectStatuses.map(s => (
             <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
@@ -128,10 +168,10 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
         </select>
       </div>
       <div>
-        <label className="block text-gray-700 text-sm font-semibold mb-2">Assigned Team Members:</label>
-        <div className="border border-gray-300 rounded p-3 max-h-40 overflow-y-auto">
+        <label className="block mb-2 text-sm font-semibold text-gray-700">Assigned Team Members:</label>
+        <div className="p-3 overflow-y-auto border border-gray-300 rounded max-h-40">
           {allTeamMembers.length === 0 ? (
-            <p className="text-gray-500 text-sm">No team members available to assign.</p>
+            <p className="text-sm text-gray-500">No team members available to assign.</p>
           ) : (
             allTeamMembers.map(member => (
               <div key={member.id} className="flex items-center mb-2">
@@ -140,18 +180,18 @@ const ProjectForm = ({ project = null, onSaveSuccess }) => {
                   id={`member-${member.id}`}
                   checked={assignedTeamMemberIds.has(member.id)}
                   onChange={() => handleMemberToggle(member.id)}
-                  className="mr-2 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  className="w-4 h-4 mr-2 text-green-600 border-gray-300 rounded focus:ring-green-500"
                 />
-                <label htmlFor={`member-${member.id}`} className="text-gray-700 text-sm">{member.name} ({member.email})</label>
+                <label htmlFor={`member-${member.id}`} className="text-sm text-gray-700">{member.name} ({member.email})</label>
               </div>
             ))
           )}
         </div>
       </div>
-      {error && <p className="text-red-500 text-xs italic">{error}</p>}
+      {error && <p className="text-xs italic text-red-500">{error}</p>}
       <button
         type="submit"
-        className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-md w-full transition duration-200"
+        className="w-full px-4 py-2 font-bold text-white transition duration-200 bg-green-600 rounded-md shadow-md hover:bg-green-700"
       >
         {project ? 'Update Project' : 'Create Project'}
       </button>
