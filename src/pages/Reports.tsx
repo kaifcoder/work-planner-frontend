@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,7 +35,29 @@ export default function Reports() {
       if (filterStatus) filters.status = filterStatus;
       if (filterProjectId) filters.projectId = filterProjectId;
       const data = await apiService.getManagerReport(filters);
-      setTasks(data);
+      setTasks(
+        data.map((task: any) => ({
+          ...task,
+          id: String(task.id),
+          project: task.project
+            ? { ...task.project, id: String(task.project.id) }
+            : undefined,
+          assignedToUser: task.assignedToUser
+            ? { ...task.assignedToUser, id: String(task.assignedToUser.id) }
+            : undefined,
+          suggestedBy: task.suggestedBy
+            ? {
+                ...task.suggestedBy,
+                id: String(task.suggestedBy.id),
+                name: task.suggestedBy.name,
+                username: task.suggestedBy.username,
+              }
+            : undefined,
+          suggestedByUser: task.suggestedByUser
+            ? { ...task.suggestedByUser, id: String(task.suggestedByUser.id) }
+            : undefined,
+        }))
+      );
     } catch {
       setError('Failed to fetch tasks.');
     } finally {
@@ -51,7 +74,7 @@ export default function Reports() {
     const fetchAllProjects = async () => {
       try {
         const allProjects = await apiService.getAllProjects();
-        setProjectOptions(allProjects.map((p: { id: string; name: string }) => ({ id: String(p.id), name: p.name })));
+        setProjectOptions(allProjects.map((p: { id: number; name: string }) => ({ id: String(p.id), name: p.name })));
       } catch {
         // fallback: keep current projectOptions
       }
