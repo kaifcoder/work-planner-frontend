@@ -51,6 +51,13 @@ const ProjectDetailPage = () => {
     }
   };
 
+  const handleDeleteTask = async (taskId: string) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      await apiService.deleteTask(taskId);
+      fetchProjectData();
+    }
+  };
+
   useEffect(() => {
     fetchProjectData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +124,7 @@ const ProjectDetailPage = () => {
                   task={task}
                   showActions={true}
                   onEdit={() => setSelectedTask(task)}
+                  onDelete={() => handleDeleteTask(task.id)}
                 />
               ))}
             </div>

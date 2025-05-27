@@ -26,6 +26,7 @@ interface TaskCardProps {
   showProgressUpdateBtn?: boolean;
   onProgressUpdate?: (task: Task) => void;
   onEdit?: (task: Task) => void;
+  onDelete?: () => void;
 }
 
 const statusIcons: Record<string, ReactElement> = {
@@ -46,7 +47,7 @@ const statusColors: Record<string, string> = {
   'OVERDUE': 'bg-red-200 text-red-900 font-bold',
 };
 
-const TaskCard = ({ task, showProject = false, showActions = false, showProgressUpdateBtn = false, onProgressUpdate, onEdit }: TaskCardProps) => {
+const TaskCard = ({ task, showProject = false, showActions = false, showProgressUpdateBtn = false, onProgressUpdate, onEdit, onDelete }: TaskCardProps) => {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-200 group relative">
       <div className="flex items-center justify-between mb-2">
@@ -80,9 +81,17 @@ const TaskCard = ({ task, showProject = false, showActions = false, showProgress
             <button className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-md text-sm shadow-sm transition duration-200" onClick={() => onEdit && onEdit(task)}>
               Edit
             </button>
-            <button className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md text-sm shadow-sm transition duration-200">
-              Delete
-            </button>
+            {onDelete && (
+              <button
+                className="px-3 py-1 text-sm font-semibold text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400"
+                onClick={e => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+              >
+                Delete
+              </button>
+            )}
           </>
         )}
         {showProgressUpdateBtn && onProgressUpdate && (

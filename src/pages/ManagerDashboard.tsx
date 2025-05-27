@@ -21,20 +21,20 @@ export default function ManagerDashboard() {
   const [userSuccess, setUserSuccess] = useState("");
   const [userError, setUserError] = useState("");
   const navigate = useNavigate();
-  const {getAllProjects} = apiService;
+  const { getAllProjects, deleteProject } = apiService;
 
   // Dummy fetch for projects (replace with real API)
   const fetchProjects = async () => {
-      setLoading(true);
-      try {
-        const projectsData = await getAllProjects();
-        setProjects(projectsData);
-      } catch (err) {
-        console.error("Failed to fetch projects:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    try {
+      const projectsData = await getAllProjects();
+      setProjects(projectsData);
+    } catch (err) {
+      console.error("Failed to fetch projects:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -89,6 +89,12 @@ export default function ManagerDashboard() {
           >
             + Add Team Member
           </button>
+          <button
+            className="px-6 py-2 text-lg font-semibold text-white transition-colors rounded-lg shadow bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            onClick={() => navigate('/manager/reports')}
+          >
+            View Task Report
+          </button>
         </div>
         {/* Project Modal */}
         {showProjectModal && (
@@ -142,17 +148,33 @@ export default function ManagerDashboard() {
             <div
               key={project.id}
               className="flex items-center justify-between p-6 transition bg-white border shadow-lg cursor-pointer rounded-xl hover:shadow-xl border-slate-200 group"
-              onClick={() => navigate(`/manager/projects/${project.id}`)} 
+              onClick={() => navigate(`/manager/projects/${project.id}`)}
             >
               <div>
                 <h3 className="mb-1 text-xl font-bold transition-colors text-slate-800 group-hover:text-indigo-700">{project.name}</h3>
                 <p className="mb-1 text-slate-600">{project.description}</p>
                 <p className="text-sm text-slate-500">Deadline: <span className="font-medium text-slate-700">{project.endDate || 'N/A'}</span></p>
               </div>
-              <div className="flex items-center ml-4 text-indigo-400 transition-colors group-hover:text-indigo-700">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+              <div className="flex items-center ml-4 gap-2">
+                <button
+                  className="text-red-500 hover:text-red-700 p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-red-400"
+                  title="Delete Project"
+                  onClick={e => {
+                    e.stopPropagation();
+                    if (window.confirm('Are you sure you want to delete this project?')) {
+                      deleteProject(project.id).then(fetchProjects);
+                    }
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <span className="flex items-center ml-2 text-indigo-400 transition-colors group-hover:text-indigo-700">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
               </div>
             </div>
           ))}

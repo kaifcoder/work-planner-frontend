@@ -120,6 +120,27 @@ export const apiService = {
     return response.json()
   },
 
+  async deleteTask(taskId: string) {
+    const response = await fetch(`${API_BASE_URL}/api/task/${taskId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete task');
+    // Refresh state after deletion
+    return response.status === 204 ? {} : response.json();
+  },
+
+  // Projects
+  async deleteProject(projectId: string) {
+    const response = await fetch(`${API_BASE_URL}/api/projects/${projectId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete project');
+    // Refresh state after deletion
+    return response.status === 204 ? {} : response.json();
+  },
+
   // Reports
   async getManagerReport(filters: any = {}) {
     const params = new URLSearchParams()
