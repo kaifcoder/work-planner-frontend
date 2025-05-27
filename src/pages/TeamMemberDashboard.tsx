@@ -10,7 +10,7 @@ import SuggestTaskForm from '../components/forms/SuggestTaskForm';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-interface User { id: string; name: string; }
+interface User { id: string; name: string; username: string; }
 interface Task {
   id: string;
   title: string;
@@ -56,7 +56,7 @@ export default function TeamMemberDashboard() {
             : undefined,
           assignedToId: taskDto.assignedToUser ? String(taskDto.assignedToUser.id) : undefined,
           assignedToUser: taskDto.assignedToUser
-            ? { id: String(taskDto.assignedToUser.id), name: taskDto.assignedToUser.username }
+            ? { id: String(taskDto.assignedToUser.id), name: taskDto.assignedToUser.username, username: taskDto.assignedToUser.username }
             : undefined,
         }))
       );

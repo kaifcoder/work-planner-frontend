@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { HiOutlineUser, HiOutlineCalendar, HiOutlineClipboardList, HiOutlineCheckCircle, HiOutlineExclamationCircle } from 'react-icons/hi';
 import type { ReactElement } from 'react';
 
@@ -6,7 +5,7 @@ interface Project {
   id: string;
   name: string;
 }
-interface User { id: string; name: string; }
+interface User { id: string; name: string; username: string; }
 interface Task {
   id: string;
   title: string;
