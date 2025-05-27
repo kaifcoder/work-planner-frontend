@@ -13,7 +13,7 @@ const statusOptions = [
   { value: 'BLOCKED', label: 'Blocked' },
 ];
 
-export default function TaskProgressForm({ taskId, currentStatus, onSave, onClose }: TaskProgressFormProps) {
+export default function TaskProgressForm({  currentStatus, onSave, onClose }: TaskProgressFormProps) {
   const [status, setStatus] = useState(currentStatus === 'ASSIGNED' ? 'IN_PROGRESS' : currentStatus);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

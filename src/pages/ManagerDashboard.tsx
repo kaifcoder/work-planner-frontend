@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import Navbar from "../components/common/Navbar";
 import ProjectForm from "../components/forms/ProjectForm";
@@ -28,7 +30,14 @@ export default function ManagerDashboard() {
     setLoading(true);
     try {
       const projectsData = await getAllProjects();
-      setProjects(projectsData);
+      setProjects(
+        projectsData.map((p: any) => ({
+          id: String(p.id),
+          name: p.name,
+          description: p.description,
+          endDate: p.endDate ?? null,
+        }))
+      );
     } catch (err) {
       console.error("Failed to fetch projects:", err);
     } finally {

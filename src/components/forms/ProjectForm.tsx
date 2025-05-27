@@ -1,37 +1,20 @@
 // src/components/forms/ProjectForm.js
-import { useState, useEffect } from 'react';
-import { getUsers } from '../../api/users'; // To get TEAM_MEMBERs
-import LoadingSpinner from '../common/LoadingSpinner';
-
-// Define types for props and project
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  startDate: string;
-  endDate: string | null;
-  status: string;
-  assignedTeamMembers: TeamMember[];
-}
+import { useState } from 'react';
+import { apiService } from '../../api/apiService';
+import type { ProjectDto } from '../../types/dto';
 
 interface ProjectFormProps {
-  project?: Project | null;
+  project?: ProjectDto | null;
   onSaveSuccess: () => void;
 }
 
 const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
   const [name, setName] = useState<string>(project?.name || '');
   const [description, setDescription] = useState<string>(project?.description || '');
-  const [endDate, setEndDate] = useState<string>(project?.endDate || '');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [endDate, setEndDate] = useState<string>(
+    project?.endDate ? (typeof project.endDate === 'string' ? project.endDate : new Date(project.endDate).toISOString().slice(0, 10)) : ''
+  );
   const [error, setError] = useState<string>('');
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,9 +27,9 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
 
     try {
       if (project) {
-        await updateProject(project.id, projectData);
+        await apiService.updateProject(String(project.id), projectData);
       } else {
-        await createProject(projectData);
+        await apiService.createProject(projectData);
       }
       onSaveSuccess();
     } catch (err) {
@@ -58,7 +41,6 @@ const ProjectForm = ({ project = null, onSaveSuccess }: ProjectFormProps) => {
     }
   };
 
-  if (loading) return <LoadingSpinner />;
   if (error) return <div className="text-center text-red-500">{error}</div>;
 
   return (

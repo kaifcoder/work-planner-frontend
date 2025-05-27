@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/useAuth';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
 import { apiService } from '../api/apiService';
 import TaskCard from '../components/common/TaskCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
@@ -30,7 +30,7 @@ export default function TeamMemberDashboard() {
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showSuggestTaskModal, setShowSuggestTaskModal] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [, setSelectedProjectId] = useState<string | null>(null);
   const [projectOptions, setProjectOptions] = useState<{ id: string; name: string }[]>([]);
   const [filterProjectId, setFilterProjectId] = useState<string>('');
   const [filterDueDate, setFilterDueDate] = useState<string>('');
@@ -44,7 +44,22 @@ export default function TeamMemberDashboard() {
       if (filterStatus) filters.status = filterStatus;
       if (filterProjectId) filters.projectId = filterProjectId;
       const data = await apiService.getMemberReport(filters);
-      setTasks(data);
+      setTasks(
+        data.map((taskDto: any) => ({
+          id: String(taskDto.id),
+          title: taskDto.title,
+          description: taskDto.description,
+          dueDate: typeof taskDto.dueDate === 'string' ? taskDto.dueDate : String(taskDto.dueDate),
+          status: taskDto.status,
+          project: taskDto.project
+            ? { id: String(taskDto.project.id), name: taskDto.project.name }
+            : undefined,
+          assignedToId: taskDto.assignedToUser ? String(taskDto.assignedToUser.id) : undefined,
+          assignedToUser: taskDto.assignedToUser
+            ? { id: String(taskDto.assignedToUser.id), name: taskDto.assignedToUser.username }
+            : undefined,
+        }))
+      );
     } catch {
       setError('Failed to fetch tasks.');
     } finally {
@@ -201,10 +216,8 @@ export default function TeamMemberDashboard() {
                   } else if (projectOptions.length === 1) {
                     setSelectedProjectId(projectOptions[0].id);
                     setShowSuggestTaskModal(true);
-                  } else if (selectedProjectId) {
-                    setShowSuggestTaskModal(true);
                   } else {
-                    alert('Please select a project first.');
+                    setShowSuggestTaskModal(true);
                   }
                 }}
               >
@@ -242,10 +255,10 @@ export default function TeamMemberDashboard() {
             />
           </Modal>
         )}
-        {showSuggestTaskModal && selectedProjectId && (
+        {showSuggestTaskModal && (
           <Modal onClose={() => setShowSuggestTaskModal(false)} title="Suggest a Task">
             <SuggestTaskForm
-              projectId={selectedProjectId}
+              projectId={projectOptions.length === 1 ? projectOptions[0].id : undefined}
               onSaveSuccess={() => {
                 setShowSuggestTaskModal(false);
                 fetchTasks();

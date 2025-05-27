@@ -7,7 +7,6 @@ import Register from './components/Register';
 import ManagerDashboard from './pages/ManagerDashboard';
 import TeamMemberDashboard from './pages/TeamMemberDashboard';
 import ProjectDetails from './pages/ProjectDetailPage';
-import TaskDetails from './pages/TaskDetails';
 import Reports from './pages/Reports';
 
 function PrivateRoute({ children }: { children: ReactElement }) {
@@ -39,7 +38,6 @@ function AppRoutes() {
       <Route path="/manager/projects/:id" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
       <Route path="/manager/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
       <Route path="/team" element={<PrivateRoute><TeamMemberDashboard /></PrivateRoute>} />
-      <Route path="/team/tasks/:id" element={<PrivateRoute><TaskDetails /></PrivateRoute>} />
       <Route path="/" element={
         token ? (
           role === 'ROLE_MANAGER' ? <Navigate to="/manager" replace /> : <Navigate to="/team" replace />

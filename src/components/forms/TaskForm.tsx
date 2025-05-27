@@ -1,54 +1,36 @@
+import type { TaskDto, UserDto } from '../../types/dto';
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../../api/apiService';
-
-interface User {
-  id: string;
-  username: string;
-}
 
 interface TaskFormProps {
   onSaveSuccess: () => void;
   projectId: string;
   isManager: boolean;
-  task?: any;
+  task?: TaskDto;
 }
 
 export default function TaskForm({ onSaveSuccess, projectId, isManager, task }: TaskFormProps) {
   const { createTask, updateTask, getTeamMembers } = apiService;
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
-  const [dueDate, setDueDate] = useState(task?.dueDate || '');
-  const [assignedToUserId, setAssignedToUserId] = useState(task?.assignedToId || '');
+  const [dueDate, setDueDate] = useState(task?.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : new Date(task.dueDate).toISOString().slice(0, 10)) : '');
+  const [assignedToUserId, setAssignedToUserId] = useState(task?.assignedToUser?.id?.toString() || '');
   const [status, setStatus] = useState(task?.status || 'ASSIGNED');
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const fetchUsers = async () => {
-    try {
-      const usersData = await getTeamMembers();
-      setUsers(usersData);
-    } catch (err) {
-      console.error('Failed to fetch users:', err);
-    }
-  };
 
   useEffect(() => {
-    fetchUsers();
+    getTeamMembers().then(setUsers).catch(() => setUsers([]));
     if (task) {
-      console.log('Editing task:', task);
       setTitle(task.title || '');
       setDescription(task.description || '');
-      setDueDate(task.dueDate || '');
-      setAssignedToUserId(task.assignedTo?.id || '');
+      setDueDate(task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : new Date(task.dueDate).toISOString().slice(0, 10)) : '');
+      setAssignedToUserId(task.assignedToUser?.id?.toString() || '');
       setStatus(task.status || 'ASSIGNED');
-
-      setUsers(task.assignedToId ? [task.assignedToId] : []);
     }
-
-  }, [task]);
-
-
+  }, [task, getTeamMembers]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,19 +43,25 @@ export default function TaskForm({ onSaveSuccess, projectId, isManager, task }: 
           title,
           description,
           dueDate,
-          projectId: projectId,
-          assignedToUser: assignedToUserId ? { id: assignedToUserId } : null,
+          projectId: Number(projectId),
+          project: { id: Number(projectId), name: '', description: '', createdById: 0, endDate: '', memberIds: [], taskIds: [], createdBy: { id: 0, username: '', role: '', projectIds: [], assignedTaskIds: [], suggestedTaskIds: [] }, memberDtos: [] },
           status,
-        });
+          ...(isManager && assignedToUserId ? {
+            assignedToUser: { id: Number(assignedToUserId), username: '', role: '', projectIds: [], assignedTaskIds: [], suggestedTaskIds: [] }
+          } : {})
+        } as Partial<TaskDto>);
         setSuccess('Task updated successfully!');
       } else {
         await createTask({
           title,
           description,
           dueDate,
-          projectId: projectId,
-          assignedToUser: assignedToUserId ? { id: assignedToUserId } : null,
-        });
+          projectId: Number(projectId),
+          project: { id: Number(projectId), name: '', description: '', createdById: 0, endDate: '', memberIds: [], taskIds: [], createdBy: { id: 0, username: '', role: '', projectIds: [], assignedTaskIds: [], suggestedTaskIds: [] }, memberDtos: [] },
+          ...(isManager && assignedToUserId ? {
+            assignedToUser: { id: Number(assignedToUserId), username: '', role: '', projectIds: [], assignedTaskIds: [], suggestedTaskIds: [] }
+          } : {})
+        } as Pick<TaskDto, 'title' | 'description' | 'dueDate' | 'project' | 'assignedToUser'>);
         setSuccess('Task created successfully!');
         setTitle('');
         setDescription('');
@@ -93,38 +81,48 @@ export default function TaskForm({ onSaveSuccess, projectId, isManager, task }: 
       {error && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded">{error}</div>}
       {success && <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded">{success}</div>}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Title</label>
+        <label className="block text-sm font-medium text-gray-700" htmlFor="task-title">Title</label>
         <input
+          id="task-title"
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
           required
+          placeholder="Enter task title"
+          title="Task Title"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-700" htmlFor="task-desc">Description</label>
         <textarea
+          id="task-desc"
           value={description}
           onChange={e => setDescription(e.target.value)}
           required
+          placeholder="Enter task description"
+          title="Task Description"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Due Date</label>
+        <label className="block text-sm font-medium text-gray-700" htmlFor="task-due">Due Date</label>
         <input
+          id="task-due"
           type="date"
           value={dueDate}
           onChange={e => setDueDate(e.target.value)}
           required
+          placeholder="Due date"
+          title="Due Date"
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
       {task && (
         <div>
-          <label className="block text-sm font-medium text-gray-700">Status</label>
+          <label className="block text-sm font-medium text-gray-700" htmlFor="task-status">Status</label>
           <select
+            id="task-status"
             value={status}
             onChange={e => setStatus(e.target.value)}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -139,8 +137,9 @@ export default function TaskForm({ onSaveSuccess, projectId, isManager, task }: 
       )}
       {isManager && (
         <div>
-          <label className="block text-sm font-medium text-gray-700">Assign to User (optional)</label>
+          <label className="block text-sm font-medium text-gray-700" htmlFor="task-assign">Assign to User (optional)</label>
           <select
+            id="task-assign"
             value={assignedToUserId}
             onChange={e => setAssignedToUserId(e.target.value)}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"

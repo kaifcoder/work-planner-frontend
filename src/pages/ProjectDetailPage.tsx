@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // src/pages/ProjectDetailPage.js
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Modal from '../components/common/Modal';
@@ -12,7 +13,7 @@ import { apiService } from '../api/apiService';
 
 interface Member { id: string; name: string; }
 interface Project { id: string; name: string; description: string; endDate?: string; memberDtos: Member[]; startDate?: string; status?: string; assignedTeamMembers?: Member[]; }
-interface Task { id: string; title: string; description: string; dueDate: string; status: string; project?: Project; assignedTo?: Member; }
+interface Task { id: string; title: string; description: string; dueDate: string; status: string; createdDate?: string; project?: Project; assignedTo?: Member; }
 
 const ProjectDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,9 +32,47 @@ const ProjectDetailPage = () => {
     setError('');
     try {
       const projectData = await getProjectById(Number(id));
-      setProject(projectData);
+      setProject({
+              ...projectData,
+              id: String(projectData.id),
+              endDate: projectData.endDate ? String(projectData.endDate) : '',
+              memberDtos: projectData.memberDtos
+                ? projectData.memberDtos.map((member: any) => ({
+                    ...member,
+                    id: String(member.id),
+                  }))
+                : [],
+            });
       const tasksData = await getTasksForProject(projectData.id);
-      setProjectTasks(tasksData);
+      setProjectTasks(
+        tasksData.map((taskDto: any) => ({
+          ...taskDto,
+          id: String(taskDto.id),
+          dueDate: String(taskDto.dueDate),
+          status: taskDto.status,
+          title: taskDto.title,
+          description: taskDto.description,
+          project: taskDto.project
+            ? {
+                ...taskDto.project,
+                id: String(taskDto.project.id),
+                memberDtos: taskDto.project.memberDtos
+                  ? taskDto.project.memberDtos.map((member: any) => ({
+                      ...member,
+                      id: String(member.id),
+                    }))
+                  : [],
+              }
+            : undefined,
+          assignedTo: taskDto.assignedToUser
+            ? {
+                ...taskDto.assignedToUser,
+                id: String(taskDto.assignedToUser.id),
+                name: taskDto.assignedToUser.username,
+              }
+            : undefined,
+        }))
+      );
     } catch (err: unknown) {
       if (
         typeof err === 'object' &&
@@ -146,14 +185,89 @@ const ProjectDetailPage = () => {
               }}
               projectId={project.id}
               isManager={true}
-              task={selectedTask}
+              task={{
+                ...selectedTask,
+                id: Number(selectedTask.id),
+                createdDate: selectedTask.createdDate || '',
+                assignedToUser: selectedTask.assignedTo
+                  ? {
+                      id: Number(selectedTask.assignedTo.id),
+                      username: selectedTask.assignedTo.name || '',
+                      role: '', // Set appropriately if available
+                      projectIds: [],
+                      assignedTaskIds: [],
+                      suggestedTaskIds: [],
+                    }
+                  : null,
+                suggestedByUser: (selectedTask as any).suggestedByUser || null,
+                project: project
+                  ? {
+                      id: Number(project.id),
+                      name: project.name,
+                      description: project.description,
+                      createdById: (project as any).createdById ?? 0,
+                      endDate: project.endDate ?? null,
+                      memberIds: (project as any).memberIds ?? [],
+                      taskIds: (project as any).taskIds ?? [],
+                      createdBy: (project as any).createdBy ?? {
+                        id: 0,
+                        username: '',
+                        role: '',
+                        projectIds: [],
+                        assignedTaskIds: [],
+                        suggestedTaskIds: [],
+                      },
+                      memberDtos: project.memberDtos
+                        ? project.memberDtos.map((member: any) => ({
+                            ...member,
+                            id: Number(member.id),
+                            username: member.name || '',
+                            role: '',
+                            projectIds: [],
+                            assignedTaskIds: [],
+                            suggestedTaskIds: [],
+                          }))
+                        : [],
+                    }
+                  : undefined,
+                // Ensure all TaskDto fields are present
+              }}
             />
           </Modal>
         )}
 
         {showEditProjectModal && (
           <Modal onClose={() => setShowEditProjectModal(false)} title="Edit Project">
-            <ProjectForm project={{...project, startDate: project?.startDate || '', status: project?.status || '', assignedTeamMembers: project?.assignedTeamMembers || []}} onSaveSuccess={handleProjectFormSuccess} />
+            <ProjectForm
+              project={{
+                ...project,
+                id: Number(project.id),
+                createdById: (project as any).createdById ?? 0,
+                memberIds: (project as any).memberIds ?? [],
+                taskIds: (project as any).taskIds ?? [],
+                createdBy: (project as any).createdBy ?? {
+                  id: 0,
+                  username: '',
+                  role: '',
+                  projectIds: [],
+                  assignedTaskIds: [],
+                  suggestedTaskIds: [],
+                },
+                memberDtos: project.memberDtos
+                  ? project.memberDtos.map((member: any) => ({
+                      ...member,
+                      id: Number(member.id),
+                      username: member.name || '',
+                      role: '',
+                      projectIds: [],
+                      assignedTaskIds: [],
+                      suggestedTaskIds: [],
+                    }))
+                  : [],
+                endDate: project.endDate ?? null, // Ensure endDate is always present
+              }}
+              onSaveSuccess={handleProjectFormSuccess}
+            />
           </Modal>
         )}
       </div>
