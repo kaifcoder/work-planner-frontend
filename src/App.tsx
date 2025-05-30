@@ -8,6 +8,7 @@ import ManagerDashboard from './pages/ManagerDashboard';
 import TeamMemberDashboard from './pages/TeamMemberDashboard';
 import ProjectDetails from './pages/ProjectDetailPage';
 import Reports from './pages/Reports';
+import TeamMembersPage from './pages/TeamMembersPage';
 
 function PrivateRoute({ children }: { children: ReactElement }) {
   const { token } = useAuth();
@@ -37,6 +38,7 @@ function AppRoutes() {
       <Route path="/manager" element={<PrivateRoute><ManagerDashboard /></PrivateRoute>} />
       <Route path="/manager/projects/:id" element={<PrivateRoute><ProjectDetails /></PrivateRoute>} />
       <Route path="/manager/reports" element={<PrivateRoute><Reports /></PrivateRoute>} />
+      <Route path="/manager/team-members" element={<PrivateRoute><TeamMembersPage /></PrivateRoute>} />
       <Route path="/team" element={<PrivateRoute><TeamMemberDashboard /></PrivateRoute>} />
       <Route path="/" element={
         token ? (

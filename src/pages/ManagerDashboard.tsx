@@ -104,6 +104,13 @@ export default function ManagerDashboard() {
           >
             View Task Report
           </button>
+          {/* button to navigate to manage-team */}
+          <button
+            className="px-6 py-2 text-lg font-semibold text-white transition-colors rounded-lg shadow bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            onClick={() => navigate('/manager/team-members')}
+          >
+            Manage Team
+          </button>
         </div>
         {/* Project Modal */}
         {showProjectModal && (
